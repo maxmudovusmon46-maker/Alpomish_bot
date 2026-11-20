@@ -1,27 +1,16 @@
 import os
-import threading
-from flask import Flask
+from flask import Flask, request
 import telebot
 from telebot import types
 from google import genai
 from google.genai import types as gemini_types
 
-# Kalitlar Render serverining maxfiy sozlamalaridan avtomatik olinadi
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
+TELEGRAM_TOKEN = os.environ.get("9016494219:AAGCYRHaMVGPD7ENTGzFjhtlhw4mV9CJJ-s")
 GEMINI_KALIT = os.environ.get("GEMINI_KALIT")
 
-bot = telebot.TeleBot(TELEGRAM_TOKEN)
+bot = telebot.TeleBot(TELEGRAM_TOKEN, threaded=False)
 client = genai.Client(api_key=GEMINI_KALIT)
-
 app = Flask(__name__)
-
-@app.route('/')
-def home():
-    return "Alpomish 24/7 ishlamoqda!"
-
-def run_web():
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
 
 MODELLAR = {
     "🔵 Gemini Flash (Tezkor)": "gemini-3.1-flash-lite",
@@ -69,9 +58,20 @@ def javob_berish(xabar):
         )
         bot.reply_to(xabar, javob.text)
     except Exception as e:
-        bot.reply_to(xabar, "Biroz bandman, qayta yozib ko'ring!")
+        bot.reply_to(xabar, f"Xatolik: {str(e)[:100]}")
+
+@app.route('/' + TELEGRAM_TOKEN, methods=['POST'])
+def getMessage():
+    json_string = request.get_data().decode('utf-8')
+    update = telebot.types.Update.de_json(json_string)
+    bot.process_new_updates([update])
+    return "!", 200
+
+@app.route("/")
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url="https://onrender.com" + TELEGRAM_TOKEN)
+    return "Alpomish Webhook muvaffaqiyatli ulandi!", 200
 
 if __name__ == "__main__":
-    threading.Thread(target=run_web).start()
-    print("Alpomish Render serverida ishga tushdi!")
-    bot.infinity_polling()
+    app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 10000)))
