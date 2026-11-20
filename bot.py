@@ -5,8 +5,9 @@ from telebot import types
 from google import genai
 from google.genai import types as gemini_types
 
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
-GEMINI_KALIT = os.environ.get("GEMINI_KALIT", "")
+# .strip() atrofdagi ortiqcha bo'sh joylarni avtomatik tozalaydi
+TELEGRAM_TOKEN = os.environ.get("9016494219:AAGCYRHaMVGPD7ENTGzFjhtlhw4mV9CJJ-s", "").strip()
+GEMINI_KALIT = os.environ.get("GEMINI_KALIT", "").strip()
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN, threaded=False)
 client = genai.Client(api_key=GEMINI_KALIT)
@@ -69,9 +70,14 @@ def getMessage():
 
 @app.route("/")
 def webhook():
-    bot.remove_webhook()
-    bot.set_webhook(url="https://onrender.com")
-    return "Alpomish Webhook muvaffaqiyatli ulandi!", 200
+    try:
+        if not TELEGRAM_TOKEN:
+            return "XATO: Render Environment bo'limida TELEGRAM_TOKEN bo'sh turibdi!", 200
+        bot.remove_webhook()
+        bot.set_webhook(url="https://onrender.com")
+        return "Alpomish Webhook muvaffaqiyatli ulandi!", 200
+    except Exception as e:
+        return f"Webhook xatosi: {str(e)}", 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 10000)))
